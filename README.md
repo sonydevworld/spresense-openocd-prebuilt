@@ -1,5 +1,5 @@
 # Create OpenOCD precompiled packages for Win, Linux and MacOSX
 
-Please clone OpenOCD first because it may be customized by SSS.
+Please clone OpenOCD source first because it may be customized by SSS.
 
-Current repository is: git@github.com:nobutokobayashi/openocd.git
+Current repository is: `git@github.com:nobutokobayashi/openocd.git`
