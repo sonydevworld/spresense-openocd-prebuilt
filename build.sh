@@ -73,14 +73,14 @@ install_libusb()
     tar jxf archives/${LIBUSB_ARCHIVE} --strip-components=1 -C libusb
 
     cd libusb
-    ./configure --prefix=${DISTDIR} || { echo "configure failed."; exit 2; }
-    make || { echo "build failed."; exit 4; }
+    ./configure --prefix=${DISTDIR} || exit 1
+    make || exit 1
 
     if [ "${PLATFORM}" = "Darwin" ]; then
         preinstall_lib libusb/.libs/libusb-1.0.0.dylib
     fi
 
-    make install || { echo "install failed."; exit 5; }
+    make install || exit 1
     cd -
 }
 
@@ -91,16 +91,16 @@ install_hidapi()
     tar zxf archives/${HIDAPI_ARCHIVE} --strip-components=1 -C hidapi
 
     cd hidapi
-    ./bootstrap || { echo "bootstrap failed."; exit 3; }
+    ./bootstrap || exit 1
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
-	./configure --prefix=${DISTDIR} || { echo "configure failed."; exit 3; }
-    make || { echo "build failed."; exit 4; }
+	./configure --prefix=${DISTDIR} || exit 1
+    make || exit 1
 
     if [ "${PLATFORM}" = "Darwin" ]; then
 	    preinstall_lib mac/.libs/libhidapi.0.dylib
     fi
 
-    make install || { echo "install failed."; exit 5; }
+    make install || exit 1
     cd -
 }
 
@@ -109,11 +109,16 @@ install_openocd()
     cd openocd
 
     git clean -xdf
-    ./bootstrap || { echo "bootstrap failed."; exit 1; }
+    (cd jimtcl; git clean -xdf)
+
+    ./bootstrap || exit 1
     LDFLAGS="-Wl,-rpath -Wl,../lib" \
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
-	./configure --prefix=${DISTDIR} ${OPENOCD_CONFIGOPTS} || { echo "configure failed."; exit 2; }
-    make && make install
+        ./configure --prefix=${DISTDIR} ${OPENOCD_CONFIGOPTS} || exit 1
+
+    make clean
+    make || exit 1
+    make install || exit 1
 
     cd -
 }
