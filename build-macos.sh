@@ -41,6 +41,8 @@ if [ ! -d openocd ]; then
     exit 1
 fi
 
+PLATFORM=`uname -s`
+
 rm -rf ${DISTDIR}
 
 mkdir -p archives
@@ -54,6 +56,16 @@ if [ ! -f archives/${HIDAPI_ARCHIVE} ]; then
     curl -L ${HIDAPI_REPOS}/archive/${HIDAPI_ARCHIVE} > archives/${HIDAPI_ARCHIVE}
 fi
 
+# In MacOSX, we need to replace the dynamic library ID to be able to find
+# from OpenOCD executable in installed place.
+
+preinstall_lib()
+{
+    name=`otool -D $1 | tail -n +2`
+    newname=${name/${DISTDIR}/@executable_path/..}
+    install_name_tool -id $newname $1
+}
+
 install_libusb()
 {
     rm -rf libusb
@@ -62,7 +74,13 @@ install_libusb()
 
     cd libusb
     ./configure --prefix=${DISTDIR} || { echo "configure failed."; exit 2; }
-    make && make install
+    make || { echo "build failed."; exit 4; }
+
+    if [ "${PLATFORM}" = "Darwin" ]; then
+	preinstall_lib libusb/.libs/libusb-1.0.0.dylib
+    fi
+
+    make install || { echo "install failed."; exit 5; }
     cd -
 }
 
@@ -74,8 +92,15 @@ install_hidapi()
 
     cd hidapi
     ./bootstrap || { echo "bootstrap failed."; exit 3; }
-    ./configure --prefix=${DISTDIR} || { echo "configure failed."; exit 3; }
-    make && make install
+    PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
+	./configure --prefix=${DISTDIR} || { echo "configure failed."; exit 3; }
+    make || { echo "build failed."; exit 4; }
+
+    if [ "${PLATFORM}" = "Darwin" ]; then
+	preinstall_lib mac/.libs/libhidapi.0.dylib
+    fi
+
+    make install || { echo "install failed."; exit 5; }
     cd -
 }
 
@@ -97,22 +122,6 @@ install_openocd()
 install_libusb
 install_hidapi
 install_openocd
-
-# Replace dynamic link library path for redistributable.
-
-if [ "`uname -s`" = "Darwin" ]; then
-
-    OPENOCD=${DISTDIR}/bin/openocd
-
-    libusb_name=`otool -L ${OPENOCD} | grep libusb | cut -f 1 -d ' '`
-    hidapi_name=`otool -L ${OPENOCD} | grep hidapi | cut -f 1 -d ' '`
-
-    libusb_newname=${libusb_name/${DISTDIR}/@executable_path/..}
-    hidapi_newname=${hidapi_name/${DISTDIR}/@executable_path/..}
-
-    install_name_tool -change ${libusb_name} ${libusb_newname} ${OPENOCD}
-    install_name_tool -change ${hidapi_name} ${hidapi_newname} ${OPENOCD}
-fi
 
 # Get latest commit date for use package name
 
