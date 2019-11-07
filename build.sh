@@ -110,6 +110,7 @@ install_openocd()
 
     git clean -xdf
     ./bootstrap || { echo "bootstrap failed."; exit 1; }
+    LDFLAGS="-Wl,-rpath -Wl,../lib" \
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
 	./configure --prefix=${DISTDIR} ${OPENOCD_CONFIGOPTS} || { echo "configure failed."; exit 2; }
     make && make install
