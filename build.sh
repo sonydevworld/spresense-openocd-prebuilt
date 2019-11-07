@@ -77,7 +77,7 @@ install_libusb()
     make || { echo "build failed."; exit 4; }
 
     if [ "${PLATFORM}" = "Darwin" ]; then
-	preinstall_lib libusb/.libs/libusb-1.0.0.dylib
+        preinstall_lib libusb/.libs/libusb-1.0.0.dylib
     fi
 
     make install || { echo "install failed."; exit 5; }
@@ -97,7 +97,7 @@ install_hidapi()
     make || { echo "build failed."; exit 4; }
 
     if [ "${PLATFORM}" = "Darwin" ]; then
-	preinstall_lib mac/.libs/libhidapi.0.dylib
+	    preinstall_lib mac/.libs/libhidapi.0.dylib
     fi
 
     make install || { echo "install failed."; exit 5; }
@@ -133,8 +133,21 @@ cd -
 
 package=openocd-${OPENOCD_VERSION}-${OPENOCD_MODVERSION}-${LATEST_DATE}
 
+case "${PLATFORM}" in
+    Linux)
+        if [ "`uname -m`" = "x86_64" ]; then
+            TARGET=linux64
+        else
+            TARGET=linux32
+        fi
+        ;;
+    Darwin)
+        TARGET=macosx
+        ;;
+esac
+
 rm -rf ${package}
 mv ${DISTDIR} ${package}
-tar cvjf ${package}-macosx.tar.bz2 ${package}
-ls -l ${package}-macosx.tar.bz2
+tar cvjf ${package}-${TARGET}.tar.bz2 ${package}
+ls -l ${package}-${TARGET}.tar.bz2
 rm -rf ${package}
