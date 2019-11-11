@@ -41,7 +41,41 @@ if [ ! -d openocd ]; then
     exit 1
 fi
 
+if [ "$1" = "-h" ]; then
+    echo "$0 [win32|win64]"
+    exit 1
+fi
+
 PLATFORM=`uname -s`
+
+case "${PLATFORM}" in
+    Linux)
+        if [ "`uname -m`" = "x86_64" ]; then
+            TARGET=linux64
+        else
+            TARGET=linux32
+        fi
+        ;;
+    Darwin)
+        TARGET=macosx
+        ;;
+esac
+
+# Take first option [win32|win64].
+
+if [ "$1" = "win64" ]; then
+    CROSS_COMPILE="--host=x86_64-w64-mingw32"
+    TARGET=win64
+fi
+if [ "$1" = "win32" ]; then
+    CROSS_COMPILE="--host=i686-w64-mingw32"
+    TARGET=win32
+fi
+
+if [ ! -z "${CROSS_COMPILE}" -a "${PLATFORM}" = "Darwin" ]; then
+    echo Sorry, windows cross compile not supported in mac.
+    exit 1
+fi
 
 rm -rf ${DISTDIR}
 
@@ -73,7 +107,7 @@ install_libusb()
     tar jxf archives/${LIBUSB_ARCHIVE} --strip-components=1 -C libusb
 
     cd libusb
-    ./configure --prefix=${DISTDIR} || exit 1
+    ./configure --prefix=${DISTDIR} ${CROSS_COMPILE} || exit 1
     make || exit 1
 
     if [ "${PLATFORM}" = "Darwin" ]; then
@@ -93,7 +127,7 @@ install_hidapi()
     cd hidapi
     ./bootstrap || exit 1
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
-	./configure --prefix=${DISTDIR} || exit 1
+	./configure --prefix=${DISTDIR} ${CROSS_COMPILE} || exit 1
     make || exit 1
 
     if [ "${PLATFORM}" = "Darwin" ]; then
@@ -114,7 +148,7 @@ install_openocd()
     ./bootstrap || exit 1
     LDFLAGS="-Wl,-rpath -Wl,../lib" \
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
-        ./configure --prefix=${DISTDIR} ${OPENOCD_CONFIGOPTS} || exit 1
+        ./configure --prefix=${DISTDIR} ${CROSS_COMPILE} ${OPENOCD_CONFIGOPTS} || exit 1
 
     make clean
     make || exit 1
@@ -137,23 +171,14 @@ cd -
 
 # Create release archive
 
+mkdir -p dist
 package=openocd-${OPENOCD_VERSION}-${OPENOCD_MODVERSION}-${LATEST_DATE}
-
-case "${PLATFORM}" in
-    Linux)
-        if [ "`uname -m`" = "x86_64" ]; then
-            TARGET=linux64
-        else
-            TARGET=linux32
-        fi
-        ;;
-    Darwin)
-        TARGET=macosx
-        ;;
-esac
 
 rm -rf ${package}
 mv ${DISTDIR} ${package}
-tar cvjf ${package}-${TARGET}.tar.bz2 ${package}
-ls -l ${package}-${TARGET}.tar.bz2
+tar cvjf dist/${package}-${TARGET}.tar.bz2 ${package}
+
+# Show result and clean distrib
+
+ls -l dist/${package}-${TARGET}.tar.bz2
 rm -rf ${package}

@@ -2,4 +2,4 @@ archives
 libusb
 hidapi
 openocd
-*.tar.bz2
+dist
