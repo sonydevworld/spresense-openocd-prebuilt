@@ -46,22 +46,20 @@ if [ "$1" = "-h" ]; then
     exit 1
 fi
 
+# Determine native platform target
+
 PLATFORM=`uname -s`
 
 case "${PLATFORM}" in
     Linux)
-        if [ "`uname -m`" = "x86_64" ]; then
-            TARGET=linux64
-        else
-            TARGET=linux32
-        fi
+        TARGET=linux64
         ;;
     Darwin)
         TARGET=macosx
         ;;
 esac
 
-# Take first option [win32|win64].
+# Take first option [win32|win64|linux32].
 
 if [ "$1" = "win64" ]; then
     CROSS_COMPILE="--host=x86_64-w64-mingw32"
@@ -70,6 +68,10 @@ fi
 if [ "$1" = "win32" ]; then
     CROSS_COMPILE="--host=i686-w64-mingw32"
     TARGET=win32
+fi
+if [ "$1" = "linux32" ]; then
+    CROSS_COMPILE="--host=i686-linux-gnu"
+    TARGET=linux32
 fi
 
 if [ ! -z "${CROSS_COMPILE}" -a "${PLATFORM}" = "Darwin" ]; then
