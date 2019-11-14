@@ -1,8 +1,9 @@
 #!/bin/sh
 
-if [ -z "`which docker 2>/dev/null`" ]; then
-    echo "Please install docker first!"
-fi
+which docker >/dev/null || {
+    echo "Please install docker first!";
+    exit 1;
+}
 
 if [ "`uname -s`" = "Darwin" ]; then
     # Build MacOS package
@@ -16,6 +17,5 @@ docker build -t buildenv .
 # Linux 64 bit and other supported architectures
 
 docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" --name build buildenv ./build.sh
-docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" --name build buildenv ./build.sh linux32
 docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" --name build buildenv ./build.sh win32
 docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" --name build buildenv ./build.sh win64
