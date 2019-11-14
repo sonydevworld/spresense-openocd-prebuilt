@@ -148,7 +148,7 @@ install_openocd()
     (cd jimtcl; git clean -xdf)
 
     ./bootstrap || exit 1
-    LDFLAGS="-Wl,-rpath -Wl,../lib" \
+    LDFLAGS='-Wl,-rpath -Wl,"\$\$$ORIGIN/../lib"' \
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
         ./configure --prefix=${DISTDIR} ${CROSS_COMPILE} ${OPENOCD_CONFIGOPTS} || exit 1
 
