@@ -179,6 +179,7 @@ package=openocd-${OPENOCD_VERSION}-${OPENOCD_MODVERSION}-${LATEST_DATE}
 rm -rf ${package}
 mv ${DISTDIR} ${package}
 tar cvjf dist/${package}-${TARGET}.tar.bz2 ${package}
+(cd dist; shasum -a 256 ${package}-${TARGET}.tar.bz2 > ${package}-${TARGET}.tar.bz2.sha)
 
 # Show result and clean distrib
 
