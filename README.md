@@ -39,7 +39,7 @@ After container built successfully, you can use `build.sh` from docker.
 Created docker image must be run in the root directory of this repository.
 
 ```
-$ docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" buildenv ./build.sh [win32|win64|linux32]
+$ docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" -u $(id -u):$(id -g) buildenv ./build.sh [win32|win64|linux32]
 ```
 
 If no options to build.sh, create Linux 64 bit package. Available options are `win32`, `win64` and `linux32`.

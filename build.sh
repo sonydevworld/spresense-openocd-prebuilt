@@ -10,8 +10,10 @@ HIDAPI_REPOS=https://github.com/libusb/hidapi
 HIDAPI_VERSION=0.9.0
 HIDAPI_ARCHIVE=hidapi-${HIDAPI_VERSION}.tar.gz
 
-OPENOCD_VERSION=0.10.0
+OPENOCD_VERSION=0.12.0
 OPENOCD_MODVERSION=spr1
+
+OPENOCDDIR=spresense-openocd
 
 DISTDIR=/tmp/dist
 
@@ -36,7 +38,7 @@ OPENOCD_CONFIGOPTS="--disable-ftdi \
 --disable-openjtag \
 --disable-jlink"
 
-if [ ! -d openocd ]; then
+if [ ! -d $OPENOCDDIR ]; then
     echo "OpenOCD source directory not found. Please clone OpenOCD first!"
     exit 1
 fi
@@ -142,10 +144,10 @@ install_hidapi()
 
 install_openocd()
 {
-    cd openocd
+    cd $OPENOCDDIR
 
     git clean -xdf
-    (cd jimtcl; git clean -xdf)
+    git -C jimtcl clean -xdf
 
     ./bootstrap || exit 1
     LDFLAGS='-Wl,-rpath -Wl,"\$\$$ORIGIN/../lib"' \
@@ -167,8 +169,15 @@ install_openocd
 
 # Get latest commit date for use package name
 
-cd openocd
+cd $OPENOCDDIR
 LATEST_DATE=`git show --format=format:%ci -s | cut -f 1 -d ' ' | sed -e 's/-//g'`
+
+if [ -e configure ]; then
+    # Get version from configure script
+    eval `grep PACKAGE_VERSION= configure`
+    OPENOCD_VERSION=$PACKAGE_VERSION
+fi
+echo OpenOCD Version: $OPENOCD_VERSION
 cd -
 
 # Create release archive

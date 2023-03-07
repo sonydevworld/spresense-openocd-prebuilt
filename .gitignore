@@ -1,5 +1,5 @@
-archives
-libusb
-hidapi
-openocd
-dist
+/spresense-openocd
+/archives
+/hidapi
+/libusb
+/dist
