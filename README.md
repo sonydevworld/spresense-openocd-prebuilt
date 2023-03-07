@@ -14,8 +14,8 @@ Please clone OpenOCD source first because it may be customized by Sony Semicondu
 
 You can use Homebrew package manager (https://brew.sh) to install tools other than XCode developer tools.
 
-```
-$ brew install automake autoconf pkg-config libtool
+```bash
+brew install automake autoconf pkg-config libtool
 ```
 
 ### Build packages for all architectures by Docker on MacOSX (recommend)
@@ -31,15 +31,15 @@ After script successfully, output all of the package files (`*.tar.bz2`) into `d
 You can use docker image using Dockerfile in current directory.
 Type following command to build docker container.
 
-```
-$ docker build -t buildenv .
+```bash
+docker build -t buildenv .
 ```
 
 After container built successfully, you can use `build.sh` from docker.
 Created docker image must be run in the root directory of this repository.
 
-```
-$ docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" -u $(id -u):$(id -g) buildenv ./build.sh [win32|win64|linux32]
+```bash
+docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" -u $(id -u):$(id -g) buildenv ./build.sh [win32|win64|linux32]
 ```
 
 If no options to build.sh, create Linux 64 bit package. Available options are `win32`, `win64` and `linux32`.
