@@ -129,6 +129,9 @@ install_hidapi()
     tar zxf archives/${HIDAPI_ARCHIVE} --strip-components=1 -C hidapi
 
     cd hidapi
+    if [ "${PLATFORM}" = "Darwin" ]; then
+        patch -p1 < ../hidapi-00-configure.patch
+    fi
     ./bootstrap || exit 1
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
 	./configure --prefix=${DISTDIR} ${CROSS_COMPILE} || exit 1
