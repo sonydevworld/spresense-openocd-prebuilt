@@ -1,0 +1,10 @@
+--- hidapi-hidapi-0.9.0/configure.ac	2019-06-19 19:34:38.000000000 +0900
++++ hidapi/configure.ac	2023-03-08 13:39:48.000000000 +0900
+@@ -20,7 +20,6 @@
+ 
+ AC_CONFIG_MACRO_DIR([m4])
+ AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+-AC_CONFIG_MACRO_DIR([m4])
+ 
+ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+ LT_INIT
