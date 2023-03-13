@@ -18,35 +18,31 @@ You can use Homebrew package manager (https://brew.sh) to install tools other th
 brew install automake autoconf pkg-config libtool
 ```
 
-### Build packages for all architectures by Docker on MacOSX (recommend)
+### Build packages for target host
 
-Install docker and above developer tools, and just run `build-all-packages.sh`. This script is just a batch script to perform build process as below section.
+Run following instruction with OPENOCDDIR as spresense-openocd directory in abs path.
 
-This script takes a long time because always perform a clean build.
-
-After script successfully, output all of the package files (`*.tar.bz2`) into `dist` directory.
+```bash
+OPENOCDDIR=$(pwd)/spresense-openocd ./build.sh
+```
 
 ### Build packages individually by Docker 
 
+It can be built for linux and windows binaries.
 You can use docker image using Dockerfile in current directory.
 Type following command to build docker container.
 
 ```bash
-docker build -t buildenv .
+docker build -t build-openocd .
 ```
 
-After container built successfully, you can use `build.sh` from docker.
-Created docker image must be run in the root directory of this repository.
+After container built successfully, you can use `build-wrapper.sh`.
 
 ```bash
-docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" -u $(id -u):$(id -g) buildenv ./build.sh [win32|win64|linux32]
+build-wrapper.sh [linux64|win64]
 ```
 
-If no options to build.sh, create Linux 64 bit package. Available options are `win32`, `win64` and `linux32`.
+If no options to build-wrapper.sh, create Linux 64 bit package. Available options are `win32`, `win64` and `linux32`.
 
-## Building OpenOCD in Linux
-
-As doing in above docker container image, you can run `build.sh` on Ubuntu 18.04 (bionic).
-Please refer `Dockerfile` to necessary build tools for creating linux and windows packages.
-
-In this way, MacOSX package can not built.
+The OpenOCD source directory is $(pwd)/spresense-openocd used in default.
+If you want to change it, set OPENOCDDIR variable in abs path.

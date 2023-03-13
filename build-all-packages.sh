@@ -12,10 +12,9 @@ fi
 
 # Make sure want to be build container exists
 
-docker build -t buildenv .
+docker build -t build-openocd .
 
 # Linux 64 bit and other supported architectures
 
-docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" --name build buildenv ./build.sh
-docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" --name build buildenv ./build.sh win32
-docker run -it --rm --mount "type=bind,source=$(pwd),destination=/work" --name build buildenv ./build.sh win64
+./build-wrapper.sh
+TARGET=win64 ./build-wrapper.sh
