@@ -7,7 +7,7 @@ LIBUSB_VERSION=1.0.23
 LIBUSB_ARCHIVE=libusb-${LIBUSB_VERSION}.tar.bz2
 
 HIDAPI_REPOS=https://github.com/libusb/hidapi
-HIDAPI_VERSION=0.11.0
+HIDAPI_VERSION=0.9.0
 HIDAPI_ARCHIVE=hidapi-${HIDAPI_VERSION}.tar.gz
 
 # OpenOCD version would be replaced with actual version
@@ -134,7 +134,13 @@ install_hidapi()
     mkdir ${SRCDIR}
     tar zxf archives/${HIDAPI_ARCHIVE} --strip-components=1 -C ${SRCDIR}
 
+    # Do not use realpath, it can not used on macOS.
+    # This patch file is for macOS only.
+    PATCHFILE=$(pwd)/hidapi-00-configure.patch
     cd ${SRCDIR}
+    if [ "${PLATFORM}" = "Darwin" ]; then
+        patch -p1 < $PATCHFILE
+    fi
     ./bootstrap || exit 1
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
 	./configure --prefix=${DISTDIR} ${CROSS_COMPILE} || exit 1
