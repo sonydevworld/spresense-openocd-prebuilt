@@ -3,17 +3,18 @@
 set -x
 
 LIBUSB_REPOS=https://github.com/libusb/libusb
-LIBUSB_VERSION=1.0.21
+LIBUSB_VERSION=1.0.23
 LIBUSB_ARCHIVE=libusb-${LIBUSB_VERSION}.tar.bz2
 
 HIDAPI_REPOS=https://github.com/libusb/hidapi
 HIDAPI_VERSION=0.9.0
 HIDAPI_ARCHIVE=hidapi-${HIDAPI_VERSION}.tar.gz
 
-OPENOCD_VERSION=0.12.0
+# OpenOCD version would be replaced with actual version
+OPENOCD_VERSION=0.11.0
 OPENOCD_MODVERSION=spr1
 
-OPENOCDDIR=spresense-openocd
+OPENOCDDIR=${OPENOCDDIR:-/tmp/openocd}
 
 DISTDIR=/tmp/dist
 
@@ -29,6 +30,8 @@ OPENOCD_CONFIGOPTS="--disable-ftdi \
 --disable-opendous \
 --disable-aice \
 --disable-usbprog \
+--disable-esp-usb-jtag \
+--disable-nulink \
 --disable-rlink \
 --disable-armjtagew \
 --enable-cmsis-dap \
@@ -36,6 +39,7 @@ OPENOCD_CONFIGOPTS="--disable-ftdi \
 --disable-usb-blaster \
 --disable-presto \
 --disable-openjtag \
+--disable-buspirate \
 --disable-jlink"
 
 if [ ! -d $OPENOCDDIR ]; then
@@ -106,11 +110,12 @@ preinstall_lib()
 
 install_libusb()
 {
-    rm -rf libusb
-    mkdir libusb
-    tar jxf archives/${LIBUSB_ARCHIVE} --strip-components=1 -C libusb
+    SRCDIR=/tmp/libusb
+    rm -rf ${SRCDIR}
+    mkdir ${SRCDIR}
+    tar jxf archives/${LIBUSB_ARCHIVE} --strip-components=1 -C ${SRCDIR}
 
-    cd libusb
+    cd ${SRCDIR}
     ./configure --prefix=${DISTDIR} ${CROSS_COMPILE} || exit 1
     make || exit 1
 
@@ -124,13 +129,17 @@ install_libusb()
 
 install_hidapi()
 {
-    rm -rf hidapi
-    mkdir hidapi
-    tar zxf archives/${HIDAPI_ARCHIVE} --strip-components=1 -C hidapi
+    SRCDIR=/tmp/hidapi
+    rm -rf ${SRCDIR}
+    mkdir ${SRCDIR}
+    tar zxf archives/${HIDAPI_ARCHIVE} --strip-components=1 -C ${SRCDIR}
 
-    cd hidapi
+    # Do not use realpath, it can not used on macOS.
+    # This patch file is for macOS only.
+    PATCHFILE=$(pwd)/hidapi-00-configure.patch
+    cd ${SRCDIR}
     if [ "${PLATFORM}" = "Darwin" ]; then
-        patch -p1 < ../hidapi-00-configure.patch
+        patch -p1 < $PATCHFILE
     fi
     ./bootstrap || exit 1
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
@@ -147,15 +156,20 @@ install_hidapi()
 
 install_openocd()
 {
-    cd $OPENOCDDIR
+    BUILDDIR=/tmp/build-openocd
 
+    cd $OPENOCDDIR
     git clean -xdf
     git -C jimtcl clean -xdf
-
     ./bootstrap || exit 1
+    cd -
+
+    mkdir -p $BUILDDIR
+    cd $BUILDDIR
+
     LDFLAGS='-Wl,-rpath -Wl,"\$\$$ORIGIN/../lib"' \
     PKG_CONFIG_PATH=${DISTDIR}/lib/pkgconfig \
-        ./configure --prefix=${DISTDIR} ${CROSS_COMPILE} ${OPENOCD_CONFIGOPTS} || exit 1
+        $OPENOCDDIR/configure --prefix=${DISTDIR} ${CROSS_COMPILE} ${OPENOCD_CONFIGOPTS} || exit 1
 
     make clean
     make || exit 1
@@ -180,7 +194,6 @@ if [ -e configure ]; then
     eval `grep PACKAGE_VERSION= configure`
     OPENOCD_VERSION=$PACKAGE_VERSION
 fi
-echo OpenOCD Version: $OPENOCD_VERSION
 cd -
 
 # Create release archive
@@ -193,10 +206,10 @@ mv ${DISTDIR} ${package}
 
 if [ "$TARGET" = "win32" -o "$TARGET" = "win64" ]; then
     distfile=${package}-${TARGET}.zip
-    zip -r dist/${distfile} ${package}
+    zip -q -r dist/${distfile} ${package}
 else
     distfile=${package}-${TARGET}.tar.bz2
-    tar cvjf dist/${distfile} ${package}
+    tar cjf dist/${distfile} ${package}
 fi
 
 (cd dist; shasum -a 256 ${distfile} > ${distfile}.sha)
